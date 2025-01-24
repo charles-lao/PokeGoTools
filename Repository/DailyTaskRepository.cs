@@ -12,9 +12,17 @@ namespace PokeGoTools.Repository
         {
             _db = db;
         }
-        public Task<bool> CompleteTaskAsync(int id)
+        public async Task<bool> ToggleTaskAsync(int id)
         {
-            throw new NotImplementedException();
+            var objFromDb = await _db.DailyTask.FirstOrDefaultAsync(u => u.Id == id);
+            if(objFromDb != null)
+            {
+                objFromDb.IsCompleted = !objFromDb.IsCompleted;
+                _db.DailyTask.Update(objFromDb);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            return false;
         }
 
         public Task<DailyTask> CreateAsync(DailyTask obj)

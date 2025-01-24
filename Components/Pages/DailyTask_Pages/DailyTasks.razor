@@ -8,13 +8,16 @@
 <h3 class="m-3">Daily Tasks</h3>
 
 <div class="row m-3">
+
     <ul class="list-group">
         @foreach(var task in DailyTaskList)
         {
             <li class="list-group-item">
-                <InputCheckbox id="task-cb" class="form-check-input col-sm-3" @bind-Value="task.IsCompleted" @onchange="()=>ToggleIsCompleted(task.Id)" />
+                <InputCheckbox class="form-check-input col-sm-3" Value="task.IsCompleted" 
+                ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
+                               ValueExpression="() => task.IsCompleted" />
                 <label class="col-sm-9">@task.Name</label>
-                
+
             </li>
         }
     </ul>
@@ -32,9 +35,12 @@
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
     }
 
-    private async void ToggleIsCompleted(int id)
+    private async Task ToggleIsCompleted(int id, bool isChecked)
     {
-        await _dailyTaskRepository.CompleteTaskAsync(id);
+        await _dailyTaskRepository.ToggleTaskAsync(id);
+        DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+        Console.WriteLine($"Toggle Clicked. Id is: {id}");
+        StateHasChanged();
     }
     
 }
