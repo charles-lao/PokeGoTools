@@ -12,5 +12,7 @@ namespace PokeGoTools.Repository.IRepository
         public Task<bool> DeleteAsync(int id);
         public Task<IEnumerable<DailyTask>> GetAllAsync(string? userId);
 
+        public Task<bool> AddDefaultTasksAsync(string userId);
+
     }
 }

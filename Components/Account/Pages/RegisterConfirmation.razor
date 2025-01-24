@@ -9,6 +9,7 @@
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject IDailyTaskRepository _dailyTaskRepository
 
 <PageTitle>Register confirmation</PageTitle>
 
@@ -63,6 +64,8 @@ else
             emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
                 NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
                 new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+            await _dailyTaskRepository.AddDefaultTasksAsync(userId);
         }
     }
 }
