@@ -1,12 +1,40 @@
 ﻿@page "/dailytasks"
+@using Microsoft.AspNetCore.Authorization
 @using PokeGoTools.Data
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject IDailyTaskRepository _dailyTaskRepository
+@attribute [Authorize]
 
-<h3>Daily Tasks</h3>
+<h3 class="m-3">Daily Tasks</h3>
 
-<ul>
-
-</ul>
+<div class="row m-3">
+    <ul class="list-group">
+        @foreach(var task in DailyTaskList)
+        {
+            <li class="list-group-item">
+                <InputCheckbox id="task-cb" class="form-check-input col-sm-3" @bind-Value="task.IsCompleted" @onchange="()=>ToggleIsCompleted(task.Id)" />
+                <label class="col-sm-9">@task.Name</label>
+                
+            </li>
+        }
+    </ul>
+</div>
 
 @code {
     private IEnumerable<DailyTask> DailyTaskList = new List<DailyTask>();
+    private string UserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+    }
+
+    private async void ToggleIsCompleted(int id)
+    {
+        await _dailyTaskRepository.CompleteTaskAsync(id);
+    }
+    
 }
