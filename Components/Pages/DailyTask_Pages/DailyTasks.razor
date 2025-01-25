@@ -5,34 +5,49 @@
 @inject IDailyTaskRepository _dailyTaskRepository
 @attribute [Authorize]
 
-<h3 class="m-3">Daily Tasks</h3>
+@if(IsProcessing)
+{
+    <div class="text-center">
+        <img src="images/icons/pokeball_spinner.gif" height="150" width="150" />
+    </div>
+}
+else
+{
+    <h3 class="m-3">Daily Tasks</h3>
 
-<div class="row m-3">
+    <div class="row m-3">
 
-    <ul class="list-group">
-        @foreach(var task in DailyTaskList)
-        {
-            <li class="list-group-item">
-                <InputCheckbox class="form-check-input col-sm-3" Value="task.IsCompleted" 
-                ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
-                               ValueExpression="() => task.IsCompleted" />
-                <label class="col-sm-9">@task.Name</label>
+        <ul class="list-group">
+            @foreach (var task in DailyTaskList)
+            {
+                <li class="list-group-item">
+                    <InputCheckbox class="form-check-input col-sm-3" Value="task.IsCompleted"
+                    ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
+                    ValueExpression="() => task.IsCompleted" />
+                    <label class="col-sm-9">@task.Name</label>
 
-            </li>
-        }
-    </ul>
-</div>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+
 
 @code {
     private IEnumerable<DailyTask> DailyTaskList = new List<DailyTask>();
     private string UserId;
+    private bool IsProcessing = true;
 
     protected override async Task OnInitializedAsync()
     {
+        IsProcessing = true;
         var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+        IsProcessing = false;
+        StateHasChanged();
     }
 
     private async Task ToggleIsCompleted(int id, bool isChecked)
