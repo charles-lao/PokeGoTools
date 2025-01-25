@@ -36,16 +36,13 @@ else
 
 @code {
     private IEnumerable<DailyTask> DailyTaskList = new List<DailyTask>();
-    private string UserId;
+    private string UserId = "";
     private bool IsProcessing = true;
 
     protected override async Task OnInitializedAsync()
     {
         IsProcessing = true;
-        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-        DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+        LoadTaskList();
         IsProcessing = false;
         StateHasChanged();
     }
@@ -56,6 +53,16 @@ else
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
         Console.WriteLine($"Toggle Clicked. Id is: {id}");
         StateHasChanged();
+    }
+
+    private async Task LoadTaskList(){
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        await _dailyTaskRepository.ResetTaskAsync(UserId);
+        DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+        StateHasChanged();
+
     }
     
 }

@@ -18,6 +18,7 @@ namespace PokeGoTools.Repository
             if(objFromDb != null)
             {
                 objFromDb.IsCompleted = !objFromDb.IsCompleted;
+                objFromDb.LastUpdated = DateOnly.FromDateTime(DateTime.Now);
                 _db.DailyTask.Update(objFromDb);
                 await _db.SaveChangesAsync();
                 return true;
@@ -43,6 +44,20 @@ namespace PokeGoTools.Repository
         public Task<DailyTask> UpdateAsync(DailyTask obj)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> ResetTaskAsync(string userId)
+        {
+            var userTasks = await _db.DailyTask.Where(u => u.UserId == userId).ToListAsync();
+
+            foreach(var task in userTasks)
+            {
+                if (task.LastUpdated != DateOnly.FromDateTime(DateTime.Now))
+                {
+                    task.IsCompleted = false;
+                }
+            }
+            return true;
         }
 
         public async Task<bool> AddDefaultTasksAsync(string userId)
