@@ -13,22 +13,31 @@
 }
 else
 {
-    <h3 class="m-3">Daily Tasks</h3>
+    <div class="card col-6 shadow mb-5 bg-white rounded">
+        <h3 class="card-header">Daily Tasks</h3>
+        <div class="card-body">
 
-    <div class="row m-3">
 
-        <ul class="list-group">
-            @foreach (var task in DailyTaskList)
-            {
-                <li class="list-group-item">
-                    <InputCheckbox class="form-check-input col-sm-3" Value="task.IsCompleted"
-                    ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
-                    ValueExpression="() => task.IsCompleted" />
-                    <label class="col-sm-9">@task.Name</label>
+            <div class="row m-1">
 
-                </li>
-            }
-        </ul>
+                <ul class="list-group">
+                    @foreach (var task in DailyTaskList)
+                    {
+                        <li class="list-group-item list-group-item-action">
+                            <InputCheckbox class="form-check-input col-sm-3 fs-4" role="button" Value="task.IsCompleted"
+                            ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
+                            ValueExpression="() => task.IsCompleted" />
+                            <img src="images/icons/pokeball_icon.png" height="20" width="20" class="mx-1" /><label class="col-sm-9 fs-5 @((task.IsCompleted) ? "text-muted text-decoration-line-through" : "") "> @task.Name</label>
+                        </li>
+                    }
+                </ul>
+
+                <div class="row pt-2">
+                    <button type="button" class="btn btn-primary col-2"><i class="bi bi-plus-square"></i> Add Task</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 }
 
@@ -42,7 +51,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         IsProcessing = true;
-        LoadTaskList();
+        await LoadTaskList();
         IsProcessing = false;
         StateHasChanged();
     }
@@ -51,7 +60,6 @@ else
     {
         await _dailyTaskRepository.ToggleTaskAsync(id);
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
-        Console.WriteLine($"Toggle Clicked. Id is: {id}");
         StateHasChanged();
     }
 
@@ -62,7 +70,6 @@ else
         await _dailyTaskRepository.ResetTaskAsync(UserId);
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
         StateHasChanged();
-
     }
     
 }
