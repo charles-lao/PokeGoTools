@@ -3,6 +3,7 @@
 @using PokeGoTools.Data
 @inject AuthenticationStateProvider _authenticationStateProvider
 @inject IDailyTaskRepository _dailyTaskRepository
+@inject NavigationManager _navigationManager
 @attribute [Authorize]
 
 @if(IsProcessing)
@@ -17,36 +18,59 @@ else
         <h3 class="card-header">Daily Tasks</h3>
         <div class="card-body">
 
+            <ul class="list-group">
+                @foreach (var task in DailyTaskList)
+                {
+                    <li class="list-group-item list-group-item-action">
+                        <InputCheckbox class="form-check-input col-sm-3 fs-4" role="button" Value="task.IsCompleted"
+                        ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
+                        ValueExpression="() => task.IsCompleted" />
+                        <img src="images/icons/pokeball_icon.png" height="20" width="20" class="mx-1" /><label class="col-sm-9 fs-5 @((task.IsCompleted) ? "text-muted text-decoration-line-through" : "") "> @task.Name</label>
+                    </li>
+                }
+            </ul>
 
-            <div class="row m-1">
 
-                <ul class="list-group">
-                    @foreach (var task in DailyTaskList)
-                    {
-                        <li class="list-group-item list-group-item-action">
-                            <InputCheckbox class="form-check-input col-sm-3 fs-4" role="button" Value="task.IsCompleted"
-                            ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
-                            ValueExpression="() => task.IsCompleted" />
-                            <img src="images/icons/pokeball_icon.png" height="20" width="20" class="mx-1" /><label class="col-sm-9 fs-5 @((task.IsCompleted) ? "text-muted text-decoration-line-through" : "") "> @task.Name</label>
-                        </li>
-                    }
-                </ul>
 
-                <div class="row pt-2">
-                    <button type="button" class="btn btn-primary col-2"><i class="bi bi-plus-square"></i> Add Task</button>
-                </div>
-            </div>
+
+            <button type="button" class="btn btn-primary m-1" data-bs-toggle="modal" data-bs-target="#addTaskModal"><i class="bi bi-plus-square"></i> Create Task</button>
+
         </div>
 
     </div>
+
 }
 
+<!-- Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Task</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="inputTask">Task Name</label>
+                        <InputText type="text" class="form-control" id="inputTask" @bind-Value="NewTaskName" aria-describedby="taskHelp" placeholder="Enter task name" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" @onclick="AddTask">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @code {
     private IEnumerable<DailyTask> DailyTaskList = new List<DailyTask>();
     private string UserId = "";
     private bool IsProcessing = true;
+    private string NewTaskName = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,6 +94,19 @@ else
         await _dailyTaskRepository.ResetTaskAsync(UserId);
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
         StateHasChanged();
+    }
+
+    private async Task AddTask(){
+
+        if(NewTaskName != null && NewTaskName != "")
+        {
+            var newTask = new DailyTask { Name = NewTaskName, IsCompleted = false, LastUpdated = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), UserId = UserId };
+
+            await _dailyTaskRepository.CreateAsync(newTask);
+            _navigationManager.NavigateTo("/dailytasks");
+            StateHasChanged();
+        }
+        
     }
     
 }

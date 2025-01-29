@@ -26,9 +26,12 @@ namespace PokeGoTools.Repository
             return false;
         }
 
-        public Task<DailyTask> CreateAsync(DailyTask obj)
+        public async Task<DailyTask> CreateAsync(DailyTask newTask)
         {
-            throw new NotImplementedException();
+            await _db.DailyTask.AddAsync(newTask);
+            await _db.SaveChangesAsync();
+
+            return newTask;
         }
 
         public Task<bool> DeleteAsync(int id)
