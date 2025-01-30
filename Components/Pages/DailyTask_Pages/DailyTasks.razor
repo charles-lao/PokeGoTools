@@ -2,8 +2,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using PokeGoTools.Data
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject IJSRuntime _JS
 @inject IDailyTaskRepository _dailyTaskRepository
-@inject NavigationManager _navigationManager
 @attribute [Authorize]
 
 @if(IsProcessing)
@@ -50,16 +50,32 @@ else
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="inputTask">Task Name</label>
-                        <InputText type="text" class="form-control" id="inputTask" @bind-Value="NewTaskName" aria-describedby="taskHelp" placeholder="Enter task name" />
-                    </div>
-                </form>
+
+                <div class="form-group">
+                    <label for="inputTask">Task Name</label>
+                    <InputText required type="text" class="form-control" id="inputTask" @bind-Value="NewTaskName" aria-describedby="taskHelp" placeholder="Enter task name" />
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" @onclick="AddTask">Submit</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="AddTask">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-static">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="taskToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <img src="/images/icons/pokeball_icon.png" height="12" width="12" class="rounded me-2" alt="pokeball-icon">
+                <strong class="me-auto">Daily Tasks</strong>
+                <small>just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Hello, world! This is a toast message.
             </div>
         </div>
     </div>
@@ -84,6 +100,13 @@ else
     {
         await _dailyTaskRepository.ToggleTaskAsync(id);
         DailyTaskList = await _dailyTaskRepository.GetAllAsync(UserId);
+
+
+        if(isChecked)
+        {
+            var completedTask = DailyTaskList.FirstOrDefault(u => u.Id == id);
+            await _JS.InvokeVoidAsync("showToastWithMessage", "taskToast", "Completed task: " + completedTask.Name);
+        }   
         StateHasChanged();
     }
 
@@ -100,10 +123,16 @@ else
 
         if(NewTaskName != null && NewTaskName != "")
         {
-            var newTask = new DailyTask { Name = NewTaskName, IsCompleted = false, LastUpdated = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), UserId = UserId };
+            IsProcessing = true;
+            StateHasChanged();
 
+            var newTask = new DailyTask { Name = NewTaskName, IsCompleted = false, LastUpdated = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), UserId = UserId };
             await _dailyTaskRepository.CreateAsync(newTask);
-            _navigationManager.NavigateTo("/dailytasks");
+
+            await LoadTaskList();
+            await _JS.InvokeVoidAsync("showToastWithMessage", "taskToast", "New task added: " + NewTaskName);
+            NewTaskName = "";
+            IsProcessing = false;
             StateHasChanged();
         }
         
