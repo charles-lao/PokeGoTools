@@ -34,9 +34,15 @@ namespace PokeGoTools.Repository
             return newTask;
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var task = await _db.DailyTask.FirstOrDefaultAsync(u => u.Id == id);
+            if (task != null)
+            {
+                _db.DailyTask.Remove(task);
+                return (await _db.SaveChangesAsync()) > 0;
+            }
+            return false;
         }
 
         public async Task<IEnumerable<DailyTask>> GetAllAsync(string? userId = null)

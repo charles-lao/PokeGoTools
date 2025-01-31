@@ -22,17 +22,22 @@ else
                 @foreach (var task in DailyTaskList)
                 {
                     <li class="list-group-item list-group-item-action">
-                        <InputCheckbox class="form-check-input col-sm-3 fs-4" role="button" Value="task.IsCompleted"
-                        ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
-                        ValueExpression="() => task.IsCompleted" />
-                        <img src="images/icons/pokeball_icon.png" height="20" width="20" class="mx-1" /><label class="col-sm-9 fs-5 @((task.IsCompleted) ? "text-muted text-decoration-line-through" : "") "> @task.Name</label>
+                        <div class="row w-100">
+                            <div class="col-1">
+                                <InputCheckbox class="form-check-input fs-4" role="button" Value="task.IsCompleted"
+                                ValueChanged="async (checkedValue) => await ToggleIsCompleted(task.Id, checkedValue)"
+                                ValueExpression="() => task.IsCompleted" />
+                            </div>
+                            <div class="col-10 d-flex align-items-center text-start">
+                                <img src="images/icons/pokeball_icon.png" height="20" width="20" class="mx-1" /><label class="fs-5 @((task.IsCompleted) ? "text-muted text-decoration-line-through" : "") "> @task.Name</label>
+                            </div>
+                            <div class="col-1 text-end">
+                                <i class="bi bi-trash3 text-end" role="button" @onclick="()=>DeleteTask(task.Id)"></i>
+                            </div>
+                        </div>
                     </li>
                 }
             </ul>
-
-
-
-
             <button type="button" class="btn btn-primary m-1" data-bs-toggle="modal" data-bs-target="#addTaskModal"><i class="bi bi-plus-square"></i> Create Task</button>
 
         </div>
@@ -135,7 +140,17 @@ else
             IsProcessing = false;
             StateHasChanged();
         }
-        
+
+    }
+
+    private async Task DeleteTask(int taskId)
+    {
+        IsProcessing = true;
+        var task = DailyTaskList.FirstOrDefault(u => u.Id == taskId);
+        await _dailyTaskRepository.DeleteAsync(taskId);
+        await LoadTaskList();
+        IsProcessing = false;
+        await _JS.InvokeVoidAsync("showToastWithMessage", "taskToast", "Successfully deleted task: " + task.Name);
     }
     
 }
